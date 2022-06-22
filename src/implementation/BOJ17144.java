@@ -33,7 +33,7 @@ import java.util.*;
  * 46
  * --------------------
  */
-public class Boj17144 {
+public class BOJ17144 {
 
     static final int[] dirX = {1, 0, -1, 0};
     static final int[] dirY = {0, 1, 0, -1};

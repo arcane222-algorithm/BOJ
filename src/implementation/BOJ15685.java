@@ -26,7 +26,7 @@ import java.util.*;
  * 1992
  * -----------------
  */
-public class Boj15685 {
+public class BOJ15685 {
 
     private static class Point {
         int x, y;
