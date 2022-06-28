@@ -24,7 +24,7 @@ import java.util.*;
  * 10
  * 2
  *
- * Output 1
+ * Output 2
  * 164
  * -----------------
  */
