@@ -1,5 +1,7 @@
 package trie;
 
+import java.io.*;
+import java.util.*;
 
 /**
  * XOR 합 - BOJ13504
@@ -30,9 +32,6 @@ package trie;
  * 15
  * -----------------
  */
-import java.io.*;
-import java.util.*;
-
 public class BOJ13504 {
 
     private static class Trie {
