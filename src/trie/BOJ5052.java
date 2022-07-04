@@ -103,7 +103,7 @@ public class BOJ5052 {
         // parse t
         t = Integer.parseInt(br.readLine());
         for (int i = 0; i < t; i++) {
-            int n = Integer.parseInt(br.readLine());
+            n = Integer.parseInt(br.readLine());
             phoneNumbers = new ArrayList<>();
 
             for (int j = 0; j < n; j++) {
