@@ -78,8 +78,6 @@ public class BOJ16903 {
 
         public void remove(int value) {
             Trie current = this;
-            Stack<Trie> stack = new Stack<>();
-            stack.add(current);
 
             for (int i = MAX_LENGTH; i > -1; i--) {
                 int mask = 1 << i;
@@ -89,16 +87,17 @@ public class BOJ16903 {
                     return;
                 } else {
                     current = current.nodes[idx];
-                    stack.add(current);
                 }
             }
 
-            while(!stack.isEmpty()) {
-                Trie node = stack.pop();
-                if(!node.hasChildren()) {
-                    int idx = node.idx;
-                    node = node.parent;
-                    node.nodes[idx] = null;
+            while (!current.hasChildren()) {
+                int idx = current.idx;
+                current = current.parent;
+
+                if (current != null) {
+                    current.nodes[idx] = null;
+                } else {
+                    break;
                 }
             }
         }
