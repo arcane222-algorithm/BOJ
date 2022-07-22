@@ -1,4 +1,4 @@
-package trie;
+package tree.trie;
 
 import java.io.*;
 import java.util.*;

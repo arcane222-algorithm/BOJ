@@ -1,70 +1,65 @@
-package trie;
+package tree.trie;
 
 import java.io.*;
 import java.util.*;
 
+
 /**
- * 개미굴 - BOJ14725
+ * 디스크 트리 - BOJ7432
  * -----------------
  *
- * Trie를 구성할 때 Key 값을 개미굴의 음식, Value 값을 Trie 노드로 구성하여 Trie를 구축한다.
- * 깊이우선탐색 (DFS)를 이용하여 StringBuilder에 depth에 맞게 --표시를 추가하며 개미굴을 탐색하면 정답을 구할 수 있다.
+ * 개미굴 (BOJ14725)와 유사한 문제이다.
+ * Trie를 구성할 때 Key 값을 file 이름, Value 값을 Trie 노드로 구성하여 Trie를 구축한다.
+ * 깊이우선탐색 (DFS)를 하여 탐색 시, 파일 명에 맞게 정렬 후 StringBuilder에 depth에 맞게 공백을 추가하며 Trie속 파일을 전부 탐색하면 정답을 구할 수 있다.
  *
  * -----------------
  * Input 1
- * 3
- * 2 B A
- * 4 A B C D
- * 2 A C
+ * 7
+ * WINNT\SYSTEM32\CONFIG
+ * GAMES
+ * WINNT\DRIVERS
+ * HOME
+ * WIN\SOFT
+ * GAMES\DRIVERS
+ * WINNT\SYSTEM32\CERTSRV\CERTCO~1\X86
  *
  * Output 1
- * A
- * --B
- * ----C
- * ------D
- * --C
- * B
- * --A
- * -----------------
- * Input 2
- * 4
- * 2 KIWI BANANA
- * 2 KIWI APPLE
- * 2 APPLE APPLE
- * 3 APPLE BANANA KIWI
- *
- * Output 2
- * APPLE
- * --APPLE
- * --BANANA
- * ----KIWI
- * KIWI
- * --APPLE
- * --BANANA
+ * GAMES
+ *  DRIVERS
+ * HOME
+ * WIN
+ *  SOFT
+ * WINNT
+ *  DRIVERS
+ *  SYSTEM32
+ *   CERTSRV
+ *    CERTCO~1
+ *     X86
+ *   CONFIG
  * -----------------
  */
-public class BOJ14725 {
+public class BOJ7432 {
 
     private static class Trie {
 
         private HashMap<String, Trie> children;
-        private String food;
+        private String file;
 
         public Trie() {
             children = new HashMap<>();
         }
 
-        public void add(List<String> foods) {
+        public void add(List<String> files) {
             Trie current = this;
 
-            for(int i = 0; i < foods.size(); i++) {
-                String food = foods.get(i);
-                if(!current.children.containsKey(food)) {
+            for(int i = 0; i < files.size(); i++) {
+                String file = files.get(i);
+                if(!current.children.containsKey(file)) {
                     Trie child = new Trie();
-                    child.food = food;
-                    current.children.put(food, child);
+                    child.file = file;
+                    current.children.put(file, child);
                 }
-                current = current.children.get(food);
+                current = current.children.get(file);
             }
         }
     }
@@ -79,9 +74,9 @@ public class BOJ14725 {
         for(int i = 0; i < children.size(); i++) {
             Trie child = children.get(i).getValue();
             for(int j = 0; j < depth; j++) {
-                result.append("--");
+                result.append(" ");
             }
-            result.append(child.food);
+            result.append(child.file);
             result.append('\n');
             dfs(child, depth + 1);
         }
@@ -98,15 +93,14 @@ public class BOJ14725 {
         N = Integer.parseInt(br.readLine());
         for (int i = 0; i < N; i++) {
             //parse K
-            st = new StringTokenizer(br.readLine());
-            K = Integer.parseInt(st.nextToken());
-
-            List<String> foods = new ArrayList<>();
-            for (int j = 0; j < K; j++) {
-                foods.add(st.nextToken());
+            List<String> files = new ArrayList<>();
+            st = new StringTokenizer(br.readLine(), "\\");
+            while(st.hasMoreTokens()) {
+                files.add(st.nextToken());
             }
-            trie.add(foods);
+            trie.add(files);
         }
+
         dfs(trie, 0);
 
         // write the result
