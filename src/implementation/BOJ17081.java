@@ -7,6 +7,7 @@ import java.util.*;
 /**
  * RPG Extreme - BOJ17081
  * -----------------
+ * -----------------
  * Input 1
  * 7 8
  * .&....&.
@@ -130,479 +131,533 @@ import java.util.*;
  * Press any key to continue.
  * -----------------
  */
+import javafx.util.Pair;
+
+import java.io.*;
+import java.util.*;
+
 public class BOJ17081 {
 
     /**
-     * -------------------- static equipment, accessory classes --------------------
+     * ----------------------------------------------------
+     * ------------------- Utility class ------------------
+     * ----------------------------------------------------
      */
-    private static class Equipment {
-
-        char type;
-        int hash, value;
-
-        public Equipment(int hash, int value, char type) {
-            this.hash = hash;
-            this.value = value;
-            this.type = type;
-        }
-    }
-
-    private static abstract class AbstractAccessory {
+    private static class Constants {
         enum AccessoryType {
-            HR("HR"),
-            RE("RE"),
-            CO("CO"),
-            EX("EX"),
-            DX("DX"),
-            HU("HU"),
-            CU("CU");
+            HR(0),
+            RE(1),
+            CO(2),
+            EX(3),
+            DX(4),
+            HU(5),
+            CU(6);
 
-            private final String value;
+            final int value;
 
-            AccessoryType(String value) {
+            AccessoryType(int value) {
                 this.value = value;
             }
         }
 
-        int hash;
-        AccessoryType type;
+        enum PlayerStatus {
+            CONTINUE(0),
+            WIN(1),
+            DIED(2);
 
-        public AbstractAccessory(int hash, AccessoryType type) {
-            this.hash = hash;
-            this.type = type;
+            final int value;
+
+            PlayerStatus(int value) {
+                this.value = value;
+            }
         }
 
-        abstract void processEffect(Player player);
+        static final int[] dirX = {1, -1, 0, 0};
+        static final int[] dirY = {0, 0, -1, 1};
+    }
+
+
+    /**
+     * ----------------------------------------------------
+     * ------------- Entity class, interface --------------
+     * ----------------------------------------------------
+     */
+    private interface Attacker {
+        void attack(MovableEntity victim, boolean effect);
+    }
+
+    private interface Victim {
+        void hit(Entity attacker);
+    }
+
+    private static abstract class Entity implements Attacker {
+        Pair<Integer, Integer> pos;
+        String name;
+        int att, maxDmg;
+
+        public Entity(String name, int x, int y, int att) {
+            this.name = name;
+            this.pos = new Pair<>(x, y);
+            this.att = att;
+        }
+
+        abstract void init();
+    }
+
+    private static abstract class MovableEntity extends Entity implements Victim {
+        int def, hp, maxHp, exp;
+
+        public MovableEntity(String name, int x, int y, int att, int def, int hp, int exp) {
+            super(name, x, y, att);
+            this.def = def;
+            this.maxHp = this.hp = hp;
+            this.exp = exp;
+        }
+
+        @Override
+        public void init() {
+            hp = maxHp;
+        }
+    }
+
+
+    /**
+     * ----------------------------------------------------
+     * ------------ Trap, Monster, Player class -----------
+     * ----------------------------------------------------
+     */
+    private static class SpikeTrap extends Entity {
+
+        public SpikeTrap(int x, int y, int att) {
+            super("SPIKE TRAP", x, y, att);
+        }
+
+        @Override
+        void init() {
+        }
+
+        @Override
+        public void attack(MovableEntity victim, boolean effect) {
+            victim.hit(this);
+        }
+    }
+
+    private static class Monster extends MovableEntity {
+        boolean isBoss;
+
+        public Monster(String name, int x, int y, int att, int def, int hp, int exp, boolean isBoss) {
+            super(name, x, y, att, def, hp, exp);
+            this.isBoss = isBoss;
+        }
+
+        @Override
+        public void attack(MovableEntity victim, boolean effect) {
+            maxDmg = effect && isBoss ? 0 : att;
+            victim.hit(this);
+        }
+
+        @Override
+        public void hit(Entity attacker) {
+            int totalDmg = Math.max(attacker.maxDmg - def, 1);
+            hp = Math.max(hp - totalDmg, 0);
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            builder.append("monster=[");
+            builder.append("y=").append(pos.getValue());
+            builder.append(", x=").append(pos.getKey());
+            builder.append(", name=").append(name);
+            builder.append(", ATT=").append(att);
+            builder.append(", DEF=").append(def);
+            builder.append(", HP=").append(hp);
+            builder.append(", EXP=").append(exp);
+            builder.append(", IsBoss=").append(isBoss).append(']');
+
+            return builder.toString();
+        }
+    }
+
+    private static class Player extends MovableEntity {
+
+        static final int BASE_ATT_VALUE = 2;
+        static final int BASE_DEF_VALUE = 2;
+        static final int BASE_HP_VALUE = 20;
+        static final int BASE_EXP_VALUE = 0;
+        static final int MAX_ACCESSORY_SIZE = 4;
+
+        Constants.PlayerStatus status = Constants.PlayerStatus.CONTINUE;
+        Accessory[] accessories;
+        int startX, startY, accessoryCnt;
+        int weapon, armor, level, maxExp, expToGet;
+        Entity killer;
+
+
+        public Player(int x, int y) {
+            super("Player", x, y, BASE_ATT_VALUE, BASE_DEF_VALUE, BASE_HP_VALUE, BASE_EXP_VALUE);
+            this.startX = x;
+            this.startY = y;
+            this.level = 1;
+            this.maxExp = this.level * 5;
+            this.accessories = new Accessory[Accessory.MAX_ACCESSORY_TYPE_COUNT];
+        }
+
+        @Override
+        public void attack(MovableEntity victim, boolean effect) {
+            maxDmg = att + weapon;
+            if (effect) {
+                // CO, DX, HU 효과 체크
+                boolean conditionCO = hasAccessory(Constants.AccessoryType.CO);
+                boolean conditionDX = hasAccessory(Constants.AccessoryType.DX);
+                boolean conditionHU = hasAccessory(Constants.AccessoryType.HU);
+
+                if (conditionCO && conditionDX) {
+                    accessories[Constants.AccessoryType.DX.value].effect(this);
+                } else if (conditionCO) {
+                    accessories[Constants.AccessoryType.CO.value].effect(this);
+                }
+
+                if (conditionHU) {
+                    if (victim instanceof Monster && ((Monster) victim).isBoss)
+                        accessories[Constants.AccessoryType.HU.value].effect(this);
+                }
+            }
+            victim.hit(this);
+        }
+
+        @Override
+        public void hit(Entity attacker) {
+            if (attacker instanceof SpikeTrap) {
+                if (hasAccessory(Constants.AccessoryType.DX)) {
+                    // DX 장신구가 있으면 1만큼의 피해를 받음
+                    hp = Math.max(hp - 1, 0);
+                } else {
+                    // DX 장신구가 없으면 5만큼의 피해를 받음
+                    hp = Math.max(hp - attacker.att, 0);
+                }
+            } else if (attacker instanceof Monster) {
+                if (attacker.maxDmg > 0) {
+                    int totalDmg = Math.max(attacker.maxDmg - (def + armor), 1);
+                    hp = Math.max(hp - totalDmg, 0);
+                }
+            }
+
+            if (hp <= 0) {
+                // RE 장신구가 있을 경우 시작 위치에서 부활
+                if (hasAccessory(Constants.AccessoryType.RE)) {
+                    accessories[Constants.AccessoryType.RE.value].effect(this);
+                    removeAccessory(Constants.AccessoryType.RE);
+                    attacker.init();
+                } else {
+                    status = Constants.PlayerStatus.DIED;
+                    killer = attacker;
+                }
+            }
+        }
+
+        public boolean canGo(int x, int y) {
+            if (x < 1 || x > M) return false;
+            if (y < 1 || y > N) return false;
+            if (map[y][x] == '#') return false;
+            return true;
+        }
+
+        public void move(char dir) {
+            int dirIdx = 0;
+            if (dir == 'R') dirIdx = 0;
+            else if (dir == 'L') dirIdx = 1;
+            else if (dir == 'U') dirIdx = 2;
+            else if (dir == 'D') dirIdx = 3;
+            else dirIdx = -1;
+
+            int currX = pos.getKey();
+            int currY = pos.getValue();
+            int nxtX = currX + Constants.dirX[dirIdx];
+            int nxtY = currY + Constants.dirY[dirIdx];
+
+            if (canGo(nxtX, nxtY)) {
+                pos = new Pair<>(nxtX, nxtY);
+                switch (map[nxtY][nxtX]) {
+                    case '&':
+                    case 'M':
+                        processBattle(monsterMap.get(pos));
+                        break;
+                    case 'B':
+                        processItemAcquisition();
+                        break;
+                    case '^':
+                        hit(trap);
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                if (map[currY][currX] == '^') {
+                    hit(trap);
+                }
+            }
+        }
+
+        private void processBattle(Monster monster) {
+            for (int i = 0; ; i++) {
+                // attack player -> monster
+                attack(monster, i == 0);
+                if (monster.hp <= 0) {
+                    status = monster.isBoss ? Constants.PlayerStatus.WIN : Constants.PlayerStatus.CONTINUE;
+                    expToGet = monster.exp;
+
+                    // HR 장신구 효과 체크
+                    if (hasAccessory(Constants.AccessoryType.HR))
+                        accessories[Constants.AccessoryType.HR.value].effect(this);
+                    // EX 장신구 효과 체크
+                    if (hasAccessory(Constants.AccessoryType.EX))
+                        accessories[Constants.AccessoryType.EX.value].effect(this);
+
+                    player.exp += player.expToGet;
+                    levelUp();
+                    map[pos.getValue()][pos.getKey()] = '.';
+                    break;
+                }
+
+                // attack monster -> player
+                monster.attack(this, i == 0 && hasAccessory(Constants.AccessoryType.HU));
+                if (status == Constants.PlayerStatus.DIED) {
+                    break;
+                }
+
+                if(!player.pos.equals(monster.pos)) break;
+            }
+        }
+
+        private void processItemAcquisition() {
+            if (equipmentMap.containsKey(pos)) {
+                Equipment e = equipmentMap.get(pos);
+                if (e.type == 'W') weapon = e.value;
+                else armor = e.value;
+            }
+
+            if (accessoryMap.containsKey(pos)) {
+                Accessory a = accessoryMap.get(pos);
+                addAccessory(a);
+            }
+
+            map[pos.getValue()][pos.getKey()] = '.';
+        }
+
+        private void levelUp() {
+            if (exp >= maxExp) {
+                exp = 0;
+                level++;
+                maxExp = level * 5;
+                maxHp += 5;
+                hp = maxHp;
+                att += 2;
+                def += 2;
+            }
+        }
+
+        private boolean hasAccessory(Constants.AccessoryType type) {
+            return accessories[type.value] != null;
+        }
+
+        private void addAccessory(Accessory a) {
+            if (accessoryCnt < MAX_ACCESSORY_SIZE && !hasAccessory(a.type)) {
+                accessories[a.type.value] = a;
+                accessoryCnt++;
+            }
+        }
+
+        private void removeAccessory(Constants.AccessoryType type) {
+            if (hasAccessory(type)) {
+                accessories[type.value] = null;
+                accessoryCnt--;
+            }
+        }
+
+        private String accessoriesToString() {
+            StringBuilder builder = new StringBuilder();
+            for (Constants.AccessoryType type : Constants.AccessoryType.values()) {
+                if (hasAccessory(type)) {
+                    builder.append(type).append(' ');
+                }
+            }
+
+            return builder.toString();
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            builder.append("player=[");
+            builder.append("y=").append(pos.getValue());
+            builder.append(", x=").append(pos.getKey());
+            builder.append(", LVL=").append(level);
+            builder.append(", ATT=").append(att);
+            builder.append(", WEAPON=").append(weapon);
+            builder.append(", DEF=").append(def);
+            builder.append(", ARMOR=").append(armor);
+            builder.append(", HP=").append(hp).append('/').append(maxHp);
+            builder.append(", EXP=").append(exp).append('/').append(maxExp);
+            builder.append(", ACCESSORIES=").append(accessoriesToString()).append(']');
+
+            return builder.toString();
+        }
+    }
+
+
+    /**
+     * ----------------------------------------------------
+     * ----------- Equipment, Accessory classes -----------
+     * ----------------------------------------------------
+     */
+    private static class Equipment {
+        char type;
+        int value;
+
+        public Equipment(char type, int value) {
+            this.type = type;
+            this.value = value;
+        }
+    }
+
+    private static abstract class Accessory {
+        static final int MAX_ACCESSORY_TYPE_COUNT = 7;
+        Constants.AccessoryType type;
+
+        public Accessory() {
+            type = AccessoryFactory.cvtStringToAccessoryType(getClass().getSimpleName());
+        }
+
+        abstract void effect(Player player);
     }
 
     private static class AccessoryFactory {
 
-        public static AbstractAccessory createAccessory(int hash, AbstractAccessory.AccessoryType type) {
+        public static Constants.AccessoryType cvtStringToAccessoryType(String type) {
+            switch (type) {
+                case "HR":
+                    return Constants.AccessoryType.HR;
+                case "RE":
+                    return Constants.AccessoryType.RE;
+                case "CO":
+                    return Constants.AccessoryType.CO;
+                case "EX":
+                    return Constants.AccessoryType.EX;
+                case "DX":
+                    return Constants.AccessoryType.DX;
+                case "HU":
+                    return Constants.AccessoryType.HU;
+                case "CU":
+                    return Constants.AccessoryType.CU;
+                default:
+                    return null;
+            }
+        }
+
+        public static Accessory createAccessory(Constants.AccessoryType type) {
             switch (type) {
                 case HR:
-                    return new AccessoryHR(hash, type);
+                    return new HR();
                 case RE:
-                    return new AccessoryRE(hash, type);
+                    return new RE();
                 case CO:
-                    return new AccessoryCO(hash, type);
+                    return new CO();
                 case EX:
-                    return new AccessoryEX(hash, type);
+                    return new EX();
                 case DX:
-                    return new AccessoryDX(hash, type);
+                    return new DX();
                 case HU:
-                    return new AccessoryHU(hash, type);
+                    return new HU();
                 case CU:
-                    return new AccessoryCU(hash, type);
+                    return new CU();
                 default:
                     return null;
             }
         }
     }
 
-    private static class AccessoryHR extends AbstractAccessory {
-
-        public AccessoryHR(int idx, AccessoryType type) {
-            super(idx, type);
-        }
-
+    private static class HR extends Accessory {
         @Override
-        void processEffect(Player player) {
+        public void effect(Player player) {
             player.hp = Math.min(player.hp + 3, player.maxHp);
         }
     }
 
-    private static class AccessoryRE extends AbstractAccessory {
-
-        public AccessoryRE(int idx, AccessoryType type) {
-            super(idx, type);
-        }
-
+    private static class RE extends Accessory {
         @Override
-        void processEffect(Player player) {
-            player.x = player.startX;
-            player.y = player.startY;
+        public void effect(Player player) {
+            player.pos = new Pair<>(player.startX, player.startY);
             player.hp = player.maxHp;
         }
     }
 
-    private static class AccessoryCO extends AbstractAccessory {
-
-        public AccessoryCO(int idx, AccessoryType type) {
-            super(idx, type);
-        }
-
+    private static class CO extends Accessory {
         @Override
-        void processEffect(Player player) {
-            player.totalDmg = player.totalDmg << 1;
+        public void effect(Player player) {
+            player.maxDmg *= 2;
         }
     }
 
-    private static class AccessoryEX extends AbstractAccessory {
-
-        public AccessoryEX(int idx, AccessoryType type) {
-            super(idx, type);
-        }
-
+    private static class EX extends Accessory {
         @Override
-        void processEffect(Player player) {
+        public void effect(Player player) {
             player.expToGet = (int) (player.expToGet * 1.2);
         }
     }
 
-    private static class AccessoryDX extends AbstractAccessory {
-
-        public AccessoryDX(int idx, AccessoryType type) {
-            super(idx, type);
-        }
-
+    private static class DX extends Accessory {
         @Override
-        void processEffect(Player player) {
-            player.totalDmg = (player.totalDmg >> 1) * 3;
+        public void effect(Player player) {
+            player.maxDmg *= 3;
         }
     }
 
-    private static class AccessoryHU extends AbstractAccessory {
-
-        public AccessoryHU(int idx, AccessoryType type) {
-            super(idx, type);
-        }
-
+    private static class HU extends Accessory {
         @Override
-        void processEffect(Player player) {
+        public void effect(Player player) {
             player.hp = player.maxHp;
         }
     }
 
-    private static class AccessoryCU extends AbstractAccessory {
-
-        public AccessoryCU(int idx, AccessoryType type) {
-            super(idx, type);
-        }
-
+    private static class CU extends Accessory {
         @Override
-        void processEffect(Player player) {
-
+        public void effect(Player player) {
         }
     }
+
 
     /**
-     * -------------------- static monster, player classes --------------------
+     * --------------------------------------------------------------
+     * ---------------------- Static variables ----------------------
+     * --------------------------------------------------------------
      */
-    private static class Monster {
-        String name;
-        int x, y;
-        int att, def, hp, maxHp, exp, totalDmg;
-        boolean isBoss;
-
-        public Monster(String name, int x, int y, int att, int def, int hp, int exp, boolean isBoss) {
-            this.name = name;
-            this.x = x;
-            this.y = y;
-            this.att = att;
-            this.def = def;
-            this.maxHp = this.hp = hp;
-            this.exp = exp;
-            this.isBoss = isBoss;
-        }
-
-        public void setDamage(int damage) {
-            hp -= Math.max(1, damage - def);
-        }
-
-        @Override
-        public String toString() {
-            StringBuilder builder = new StringBuilder();
-            builder.append("y=");
-            builder.append(y);
-            builder.append(", ");
-            builder.append("x=");
-            builder.append(x);
-            builder.append(", name: ");
-            builder.append(name);
-            builder.append(", att: ");
-            builder.append(att);
-            builder.append(", def: ");
-            builder.append(def);
-            builder.append(", hp: ");
-            builder.append(hp);
-            builder.append(", exp: ");
-            builder.append(exp);
-            builder.append(", isBoss: ");
-            builder.append(isBoss);
-
-            return builder.toString();
-        }
-    }
-
-    private static class Player {
-
-        enum EventResult {
-            CONTINUE(0),
-            WIN(1),
-            KILLED_BY_MONSTER(2),
-            KILLED_BY_SPIKE_TRAP(3),
-            REINCARNATION(4);
-
-            private final int value;
-
-            EventResult(int value) {
-                this.value = value;
-            }
-
-            public int getValue() {
-                return value;
-            }
-        }
-
-        static final int dirX[] = {1, -1, 0, 0};
-        static final int dirY[] = {0, 0, -1, 1};
-        static final int MAX_ACCESSORY_SIZE = 4;
-        static final int SPIKE_DAMAGE = 5;
-        private int startX, startY, maxHp, maxExp;
-        private int x, y, level, hp, att, def, exp, totalDmg, expToGet;
-        private Equipment weapon, armor;
-        private List<AbstractAccessory> accessories = new LinkedList<>();
-
-        public Player(int x, int y) {
-            this.startX = this.x = x;
-            this.startY = this.y = y;
-            this.level = 1;
-            this.maxExp = this.level * 5;
-            this.maxHp = this.hp = 20;
-            this.att = this.def = 2;
-            this.exp = 0;
-        }
-
-        public static int posToHash(int x, int y) {
-            return Objects.hash(x, y);
-        }
-
-        private boolean canGo(int x, int y) {
-            if (x < 0 || x > M - 1) return false;
-            if (y < 0 || y > N - 1) return false;
-            if (map[y][x] == '#') return false;
-            return true;
-        }
-
-        private void levelUp() {
-            level++;
-            exp = 0;
-            maxExp = level * 5;
-
-            maxHp += 5;
-            hp = maxHp;
-            att += 2;
-            def += 2;
-        }
-
-        public EventResult move(char dir) {
-            int idx;
-            if (dir == 'R') idx = 0;
-            else if (dir == 'L') idx = 1;
-            else if (dir == 'U') idx = 2;
-            else if (dir == 'D') idx = 3;
-            else idx = -1;
-
-            EventResult result = EventResult.CONTINUE;
-            int nxtX = x + dirX[idx];
-            int nxtY = y + dirY[idx];
-            if (canGo(nxtX, nxtY)) {
-                x = nxtX;
-                y = nxtY;
-                result = processEvent(map[nxtY][nxtX]);
-            } else {
-                if (map[y][x] == '^') {
-                    setDamage(SPIKE_DAMAGE, EventResult.KILLED_BY_SPIKE_TRAP);
-                }
-            }
-
-            return result;
-        }
-
-        private EventResult processEvent(char eventType) {
-            EventResult result = EventResult.CONTINUE;
-
-            switch (eventType) {
-                case '&':
-                case 'M':
-                    result = processBattle();
-                    break;
-                case '^':
-                    result = setDamage(SPIKE_DAMAGE, EventResult.KILLED_BY_SPIKE_TRAP);
-                    break;
-                case 'B':
-                    processItemAcquisition();
-                    break;
-            }
-
-            return result;
-        }
-
-        private EventResult processBattle() {
-            int idx = -1;
-            Monster monster = monsterMap.get(posToHash(x, y));
-            EventResult eventResult = EventResult.CONTINUE;
-            System.out.println(monster);
-
-            for (int i = 0; ; i++) {
-                totalDmg = att + getWeaponValue();
-                monster.totalDmg = monster.att;
-                if (i == 0) {
-                    // process CO, DX accessory effect
-                    idx = findAccessory(AbstractAccessory.AccessoryType.CO);
-                    if (idx > -1) {
-                        accessories.get(idx).processEffect(this);
-                        idx = findAccessory(AbstractAccessory.AccessoryType.DX);
-                        if (idx > -1) {
-                            accessories.get(idx).processEffect(this);
-                            System.out.println(totalDmg + " x3");
-                        }
-                    }
-
-                    // process HU accessory effect
-                    idx = findAccessory(AbstractAccessory.AccessoryType.HU);
-                    if (idx > -1) {
-                        accessories.get(idx).processEffect(this);
-                        monster.totalDmg = 0;
-                    }
-                }
-                monster.setDamage(totalDmg);
-                if (monster.hp <= 0) break;
-
-                eventResult = setDamage(monster.totalDmg, EventResult.KILLED_BY_MONSTER);
-                if (hp <= 0) break;
-                if (eventResult == EventResult.REINCARNATION) {
-                    monster.hp = monster.maxHp;
-                    break;
-                }
-            }
-
-            if (monster.hp <= 0) {
-                // restore hp
-                idx = findAccessory(AbstractAccessory.AccessoryType.HR);
-                if (idx > -1) accessories.get(idx).processEffect(this);
-
-                // get exp
-                player.expToGet = monster.exp;
-                idx = findAccessory(AbstractAccessory.AccessoryType.EX);
-                if (idx > -1) accessories.get(idx).processEffect(this);
-                player.exp += player.expToGet;
-                if (player.exp >= player.maxExp) {
-                    levelUp();
-                }
-
-                if (monster.isBoss) eventResult = EventResult.WIN;
-                map[player.y][player.x] = '.';
-            }
-
-            return eventResult;
-        }
-
-        private void processItemAcquisition() {
-            int hash = posToHash(x, y);
-            Equipment equipment = equipmentMap.get(hash);
-            AbstractAccessory accessory = accessoryMap.get(hash);
-
-            if (equipment != null) {
-                if (equipment.type == 'W') setWeapon(equipment);
-                else setArmor(equipment);
-            }
-
-            if (accessory != null) {
-                setAccessory(accessory);
-            }
-            map[y][x] = '.';
-        }
-
-        public int getWeaponValue() {
-            return this.weapon == null ? 0 : this.weapon.value;
-        }
-
-        public int getArmorValue() {
-            return this.armor == null ? 0 : this.armor.value;
-        }
-
-        public void setWeapon(Equipment weapon) {
-            this.weapon = weapon;
-        }
-
-        public void setArmor(Equipment armor) {
-            this.armor = armor;
-        }
-
-        public void setAccessory(AbstractAccessory accessory) {
-            int size = accessories.size();
-            if (size > MAX_ACCESSORY_SIZE) return;
-            for (int i = 0; i < size; i++) {
-                AbstractAccessory current = accessories.get(i);
-                if (current.type.value.equals(accessory.type.value)) {
-                    return;
-                }
-            }
-            accessories.add(accessory);
-        }
-
-        public EventResult setDamage(int damage, EventResult result) {
-            switch (result) {
-                case KILLED_BY_MONSTER:
-                    if (damage > 0) hp = Math.max(hp - Math.max(1, damage - def - getArmorValue()), 0);
-                    break;
-
-                case KILLED_BY_SPIKE_TRAP:
-                    int idx = findAccessory(AbstractAccessory.AccessoryType.DX);
-                    if (idx > -1) hp -= 1;
-                    else hp -= damage;
-                    break;
-            }
-
-            if (hp <= 0) {
-                int idx = findAccessory(AbstractAccessory.AccessoryType.RE);
-                if (idx > -1) {
-                    accessories.get(idx).processEffect(this);
-                    accessories.remove(idx);
-                    result = EventResult.REINCARNATION;
-                }
-            } else {
-                result = EventResult.CONTINUE;
-            }
-
-            return result;
-        }
-
-        public int findAccessory(AbstractAccessory.AccessoryType type) {
-            for (int i = 0; i < accessories.size(); i++) {
-                if (accessories.get(i).type.value.equals(type.value)) {
-                    return i;
-                }
-            }
-
-            return -1;
-        }
-    }
-
-    /**
-     * -------------------- static variables --------------------
-     */
-
-    static int N, M, K, L;
+    static final SpikeTrap trap = new SpikeTrap(-1, -1, 5);
+    static int N, M, K, L, T;
     static char[][] map;
-    static String command;
+    static String commands;
     static Player player;
-    static HashMap<Integer, Monster> monsterMap;
-    static HashMap<Integer, Equipment> equipmentMap;
-    static HashMap<Integer, AbstractAccessory> accessoryMap;
+    static HashMap<Pair<Integer, Integer>, Monster> monsterMap = new HashMap<>();
+    static HashMap<Pair<Integer, Integer>, Equipment> equipmentMap = new HashMap<>();
+    static HashMap<Pair<Integer, Integer>, Accessory> accessoryMap = new HashMap<>();
     static StringBuilder result = new StringBuilder();
 
 
     /**
-     * -------------------- static methods --------------------
+     * --------------------------------------------------------------
+     * ----------------------- Static methods -----------------------
+     * --------------------------------------------------------------
      */
-    private static void initMap(BufferedReader br) throws IOException {
-        if (map == null) map = new char[N][M];
-        for (int i = 0; i < N; i++) {
+    public static void initMap(BufferedReader br) throws IOException {
+        StringTokenizer st = new StringTokenizer(br.readLine());
+        N = Integer.parseInt(st.nextToken());
+        M = Integer.parseInt(st.nextToken());
+        map = new char[N + 1][M + 1];
+
+        for (int i = 1; i < N + 1; i++) {
             String line = br.readLine();
-            for (int j = 0; j < M; j++) {
-                char point = line.charAt(j);
+            for (int j = 1; j < M + 1; j++) {
+                char point = line.charAt(j - 1);
                 switch (point) {
                     case '&':
                     case 'M':
@@ -620,136 +675,113 @@ public class BOJ17081 {
         }
     }
 
-    private static void initMonster(BufferedReader br) throws IOException {
-        if (monsterMap == null) monsterMap = new HashMap<>();
-
+    public static void initMonsters(BufferedReader br) throws IOException {
         StringTokenizer st;
         for (int i = 0; i < K; i++) {
             st = new StringTokenizer(br.readLine());
-            int y = Integer.parseInt(st.nextToken()) - 1;
-            int x = Integer.parseInt(st.nextToken()) - 1;
-            int hash = Player.posToHash(x, y);
+            int y = Integer.parseInt(st.nextToken());
+            int x = Integer.parseInt(st.nextToken());
             String name = st.nextToken();
-            int w = Integer.parseInt(st.nextToken());
-            int a = Integer.parseInt(st.nextToken());
-            int h = Integer.parseInt(st.nextToken());
-            int e = Integer.parseInt(st.nextToken());
-            Monster m = new Monster(name, x, y, w, a, h, e, map[y][x] == 'M');
-            monsterMap.put(hash, m);
+            int att = Integer.parseInt(st.nextToken());
+            int def = Integer.parseInt(st.nextToken());
+            int hp = Integer.parseInt(st.nextToken());
+            int exp = Integer.parseInt(st.nextToken());
+
+            Monster monster = new Monster(name, x, y, att, def, hp, exp, map[y][x] == 'M');
+            monsterMap.put(monster.pos, monster);
         }
     }
 
-    private static void initItems(BufferedReader br) throws IOException {
-        if (equipmentMap == null) equipmentMap = new HashMap<>();
-        if (accessoryMap == null) accessoryMap = new HashMap<>();
-
+    public static void initItems(BufferedReader br) throws IOException {
         StringTokenizer st;
         for (int i = 0; i < L; i++) {
             st = new StringTokenizer(br.readLine());
-            int y = Integer.parseInt(st.nextToken()) - 1;
-            int x = Integer.parseInt(st.nextToken()) - 1;
-            int hash = Player.posToHash(x, y);
+            int y = Integer.parseInt(st.nextToken());
+            int x = Integer.parseInt(st.nextToken());
             char type = st.nextToken().charAt(0);
+            Pair<Integer, Integer> pos = new Pair<>(x, y);
+
             switch (type) {
                 case 'W':
                 case 'A':
                     int value = Integer.parseInt(st.nextToken());
-                    equipmentMap.put(hash, new Equipment(hash, value, type));
+                    equipmentMap.put(pos, new Equipment(type, value));
                     break;
                 case 'O':
-                    AbstractAccessory.AccessoryType accessoryType = AbstractAccessory.AccessoryType.valueOf(st.nextToken());
-                    accessoryMap.put(hash, AccessoryFactory.createAccessory(hash, accessoryType));
+                    Constants.AccessoryType accessoryType = AccessoryFactory.cvtStringToAccessoryType(st.nextToken());
+                    accessoryMap.put(pos, AccessoryFactory.createAccessory(accessoryType));
                     break;
+
             }
         }
     }
 
-    private static void makeGameResult(int turn, Player.EventResult eventResult) {
-        String resStr = "";
-        switch (eventResult) {
-            case REINCARNATION:
-            case CONTINUE:
-                map[player.y][player.x] = '@';
-                map[player.startY][player.startX] = '.';
-                resStr = "Press any key to continue.";
-                break;
+    public static void createGameResult() {
+        int currX = player.pos.getKey();
+        int currY = player.pos.getValue();
+        int startX = player.startX;
+        int startY = player.startY;
+        map[startY][startX] = '.';
 
-            case WIN:
-                map[player.y][player.x] = '@';
-                map[player.startY][player.startX] = '.';
-                resStr = "YOU WIN!";
-                break;
-
-            case KILLED_BY_MONSTER:
-                map[player.startY][player.startX] = '.';
-                Monster m = monsterMap.get(Player.posToHash(player.x, player.y));
-                resStr = "YOU HAVE BEEN KILLED BY " + m.name + "..";
-                break;
-
-            case KILLED_BY_SPIKE_TRAP:
-                map[player.startY][player.startX] = '.';
-                resStr = "YOU HAVE BEEN KILLED BY SPIKE TRAP..";
-                break;
+        String resultMsg = "";
+        if (player.status == Constants.PlayerStatus.CONTINUE) {
+            resultMsg = "Press any key to continue.";
+            map[currY][currX] = '@';
+        } else if (player.status == Constants.PlayerStatus.WIN) {
+            resultMsg = "YOU WIN!";
+            map[currY][currX] = '@';
+        } else {
+            resultMsg = String.format("YOU HAVE BEEN KILLED BY %s..", player.killer.name);
         }
 
-        // print map result
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < M; j++) {
+        // print the map
+        for (int i = 1; i < N + 1; i++) {
+            for (int j = 1; j < M + 1; j++) {
                 result.append(map[i][j]);
             }
             result.append('\n');
         }
 
-        // print status result
-        result.append("Passed Turns : ").append(turn).append('\n');
+        //print the status
+        result.append("Passed Turns : ").append(T).append('\n');
         result.append("LV : ").append(player.level).append('\n');
         result.append("HP : ").append(player.hp).append('/').append(player.maxHp).append('\n');
-        result.append("ATT : ").append(player.att).append('+').append(player.getWeaponValue()).append('\n');
-        result.append("DEF : ").append(player.def).append('+').append(player.getArmorValue()).append('\n');
+        result.append("ATT : ").append(player.att).append('+').append(player.weapon).append('\n');
+        result.append("DEF : ").append(player.def).append('+').append(player.armor).append('\n');
         result.append("EXP : ").append(player.exp).append('/').append(player.maxExp).append('\n');
-        result.append(resStr);
+        result.append(resultMsg);
     }
 
     public static void main(String[] args) throws Exception {
         // Input & Output stream
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
-        StringTokenizer st;
 
-        // Parse N, M
-        st = new StringTokenizer(br.readLine());
-        N = Integer.parseInt(st.nextToken());
-        M = Integer.parseInt(st.nextToken());
-
-        // Init Map
+        // Init map
         initMap(br);
 
-        // Init Movement Command
-        command = br.readLine();
+        // Init commands;
+        commands = br.readLine();
 
-        // Init Monsters
-        initMonster(br);
+        // Init monsters
+        initMonsters(br);
 
-        // Init Items
+        // Init items
         initItems(br);
 
-        // Process Commands
-        int turn = 0;
-        char dir = '\0';
-        Player.EventResult eventResult = null;
-        for (int i = 1; i < command.length() + 1; i++) {
-            turn = i;
-            dir = command.charAt(i - 1);
-            eventResult = player.move(dir);
-            if ((eventResult != Player.EventResult.CONTINUE) && (eventResult != Player.EventResult.REINCARNATION)) {
+        // Process commands
+        for (int i = 0; i < commands.length(); i++) {
+            char dir = commands.charAt(i);
+            player.move(dir);
+            T = i + 1;
+            if (player.status != Constants.PlayerStatus.CONTINUE) {
                 break;
             }
         }
 
-        // Make Game Result
-        makeGameResult(turn, eventResult);
+        // Create game result
+        createGameResult();
 
-        // write the result
         bw.write(result.toString());
 
         // close the buffer
