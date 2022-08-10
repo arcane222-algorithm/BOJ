@@ -5,7 +5,7 @@ import java.util.*;
 
 
 /**
- * Compound Words - BOJ4151
+ * 단어퍼즐 2 - BOJ13502
  * -----------------
  * Boggle (BOJ 9202)과 비슷한 문제이다.
  * 사전에 정의된 단어들을 Trie에 삽입하여 Trie를 구축한 후 5X5로 구성된 보드 안에서 DFS를 이용하여 단어를 찾으면 된다.
