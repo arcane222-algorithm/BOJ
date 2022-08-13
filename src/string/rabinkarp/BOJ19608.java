@@ -1,4 +1,4 @@
-package rabinkarp;
+package string.rabinkarp;
 
 import java.io.*;
 import java.util.*;
