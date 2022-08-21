@@ -1,7 +1,5 @@
 package bruteforce;
 
-import javafx.util.Pair;
-
 import java.io.*;
 import java.util.*;
 
@@ -61,12 +59,46 @@ import java.util.*;
  */
 public class BOJ7576 {
 
+    private static class Vec2 {
+        int x, y;
+
+        public Vec2(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * x + y;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof Vec2) {
+                Vec2 vec2 = (Vec2) obj;
+                return x == vec2.x && y == vec2.y;
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            builder.append("Vec2={");
+            builder.append("x=").append(x);
+            builder.append(", y=").append(y).append('}');
+
+            return builder.toString();
+        }
+    }
+
     static final int[] dirX = {1, -1, 0, 0};
     static final int[] dirY = {0, 0, 1, -1};
 
-    static int M, N, count, totalCount, time;
+    static int M, N, count, totalCount;
     static int[][] box;
-    static Queue<Pair<Integer, Integer>> queue = new LinkedList<>();
+    static Queue<Vec2> queue = new LinkedList<>();
 
     public static boolean canGo(int x, int y) {
         if (x < 0 || x > M - 1) return false;
@@ -81,9 +113,9 @@ public class BOJ7576 {
         while (!queue.isEmpty()) {
             final int size = queue.size();
             for (int i = 0; i < size; i++) {
-                Pair<Integer, Integer> node = queue.poll();
-                int x = node.getValue();
-                int y = node.getKey();
+                Vec2 node = queue.poll();
+                int x = node.x;
+                int y = node.y;
 
                 for (int j = 0; j < dirX.length; j++) {
                     int nxtX = x + dirX[j];
@@ -91,7 +123,7 @@ public class BOJ7576 {
                     if (canGo(nxtX, nxtY)) {
                         box[nxtY][nxtX] = 1;
                         count++;
-                        queue.add(new Pair<>(nxtY, nxtX));
+                        queue.add(new Vec2(nxtX, nxtY));
                     }
                 }
 
@@ -120,7 +152,7 @@ public class BOJ7576 {
                 box[i][j] = num;
                 if (num > -1) {
                     if (num == 1) {
-                        queue.add(new Pair<>(i, j));
+                        queue.add(new Vec2(j, i));
                         count++;
                     }
                     totalCount++;

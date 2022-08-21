@@ -33,7 +33,7 @@ import java.util.*;
  * 6 2 O DX
  * 7 3 O HU
  * 6 6 W 3
- *
+ * <p>
  * Output 1
  * ......&.
  * .......&
@@ -76,7 +76,7 @@ import java.util.*;
  * 4 3 W 5
  * 5 6 W 1
  * 6 6 A 1
- *
+ * <p>
  * Output 2
  * ....^&
  * ......
@@ -94,8 +94,8 @@ import java.util.*;
  * -----------------
  * Input 3
  * 6 6
- * @.BB.M
- * ..##B.
+ *
+ * @.BB.M ..##B.
  * BB....
  * ##.###
  * &&.&&&
@@ -114,7 +114,7 @@ import java.util.*;
  * 3 1 W 2
  * 3 2 A 2
  * 2 5 A 10
- *
+ * <p>
  * Output 3
  * .....M
  * ..##B@
@@ -131,12 +131,41 @@ import java.util.*;
  * Press any key to continue.
  * -----------------
  */
-import javafx.util.Pair;
-
-import java.io.*;
-import java.util.*;
-
 public class BOJ17081 {
+
+    private static class Vec2 {
+        int x, y;
+
+        public Vec2(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * x + y;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof Vec2) {
+                Vec2 vec2 = (Vec2) obj;
+                return x == vec2.x && y == vec2.y;
+            } else {
+                return false;
+            }
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            builder.append("Vec2={");
+            builder.append("x=").append(x);
+            builder.append(", y=").append(y).append('}');
+
+            return builder.toString();
+        }
+    }
 
     /**
      * ----------------------------------------------------
@@ -191,13 +220,13 @@ public class BOJ17081 {
     }
 
     private static abstract class Entity implements Attacker {
-        Pair<Integer, Integer> pos;
+        Vec2 pos;
         String name;
         int att, maxDmg;
 
         public Entity(String name, int x, int y, int att) {
             this.name = name;
-            this.pos = new Pair<>(x, y);
+            this.pos = new Vec2(x, y);
             this.att = att;
         }
 
@@ -266,8 +295,8 @@ public class BOJ17081 {
         public String toString() {
             StringBuilder builder = new StringBuilder();
             builder.append("monster=[");
-            builder.append("y=").append(pos.getValue());
-            builder.append(", x=").append(pos.getKey());
+            builder.append("y=").append(pos.x);
+            builder.append(", x=").append(pos.y);
             builder.append(", name=").append(name);
             builder.append(", ATT=").append(att);
             builder.append(", DEF=").append(def);
@@ -371,13 +400,13 @@ public class BOJ17081 {
             else if (dir == 'D') dirIdx = 3;
             else dirIdx = -1;
 
-            int currX = pos.getKey();
-            int currY = pos.getValue();
+            int currX = pos.x;
+            int currY = pos.y;
             int nxtX = currX + Constants.dirX[dirIdx];
             int nxtY = currY + Constants.dirY[dirIdx];
 
             if (canGo(nxtX, nxtY)) {
-                pos = new Pair<>(nxtX, nxtY);
+                pos = new Vec2(nxtX, nxtY);
                 switch (map[nxtY][nxtX]) {
                     case '&':
                     case 'M':
@@ -416,7 +445,7 @@ public class BOJ17081 {
 
                     player.exp += player.expToGet;
                     levelUp();
-                    map[pos.getValue()][pos.getKey()] = '.';
+                    map[pos.y][pos.x] = '.';
                     break;
                 }
 
@@ -426,7 +455,7 @@ public class BOJ17081 {
                     break;
                 }
 
-                if(!player.pos.equals(monster.pos)) break;
+                if (!player.pos.equals(monster.pos)) break;
             }
         }
 
@@ -442,7 +471,7 @@ public class BOJ17081 {
                 addAccessory(a);
             }
 
-            map[pos.getValue()][pos.getKey()] = '.';
+            map[pos.y][pos.x] = '.';
         }
 
         private void levelUp() {
@@ -490,8 +519,8 @@ public class BOJ17081 {
         public String toString() {
             StringBuilder builder = new StringBuilder();
             builder.append("player=[");
-            builder.append("y=").append(pos.getValue());
-            builder.append(", x=").append(pos.getKey());
+            builder.append("y=").append(pos.y);
+            builder.append(", x=").append(pos.x);
             builder.append(", LVL=").append(level);
             builder.append(", ATT=").append(att);
             builder.append(", WEAPON=").append(weapon);
@@ -587,7 +616,7 @@ public class BOJ17081 {
     private static class RE extends Accessory {
         @Override
         public void effect(Player player) {
-            player.pos = new Pair<>(player.startX, player.startY);
+            player.pos = new Vec2(player.startX, player.startY);
             player.hp = player.maxHp;
         }
     }
@@ -637,9 +666,9 @@ public class BOJ17081 {
     static char[][] map;
     static String commands;
     static Player player;
-    static HashMap<Pair<Integer, Integer>, Monster> monsterMap = new HashMap<>();
-    static HashMap<Pair<Integer, Integer>, Equipment> equipmentMap = new HashMap<>();
-    static HashMap<Pair<Integer, Integer>, Accessory> accessoryMap = new HashMap<>();
+    static HashMap<Vec2, Monster> monsterMap = new HashMap<>();
+    static HashMap<Vec2, Equipment> equipmentMap = new HashMap<>();
+    static HashMap<Vec2, Accessory> accessoryMap = new HashMap<>();
     static StringBuilder result = new StringBuilder();
 
 
@@ -699,7 +728,7 @@ public class BOJ17081 {
             int y = Integer.parseInt(st.nextToken());
             int x = Integer.parseInt(st.nextToken());
             char type = st.nextToken().charAt(0);
-            Pair<Integer, Integer> pos = new Pair<>(x, y);
+            Vec2 pos = new Vec2(x, y);
 
             switch (type) {
                 case 'W':
@@ -717,8 +746,8 @@ public class BOJ17081 {
     }
 
     public static void createGameResult() {
-        int currX = player.pos.getKey();
-        int currY = player.pos.getValue();
+        int currX = player.pos.x;
+        int currY = player.pos.y;
         int startX = player.startX;
         int startY = player.startY;
         map[startY][startX] = '.';
