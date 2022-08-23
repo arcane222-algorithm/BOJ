@@ -7,23 +7,23 @@ import java.util.*;
 /**
  * 맹독 방벽 - BOJ7420
  * -----------------
- *
+ * <p>
  * Convex hull 알고리즘을 이용하여 모든 점을 포함할 수 있는 볼록 다각형을 구한 후
  * 다각형의 각 변에 변과 평행한 직사각형을 붙인다고 생각하면 맹독 방벽의 길이는 다각형의 각 변의 길이의 합과 각 직사각형 사이를 잇는 호의 길이의 합이 된다.
  * (각 변에 붙인 직사각형 사이의 코너의 길이는 특정 지점에 대하여 다각형의 점과 모두 L의 길이를 유지해야 하므로 호의 형태를 띄어야 한다.)
- *
+ * <p>
  * 해당 지점의 호의 길이를 구하는 방법은 세점 v1, v2, v3에 대하여 벡터 v2-v1, v3-v2가 이루는 사이각을 theta라고 할 때,
  * 위에서 각 변에 대하여 직사각형을 붙였다고 했으므로 각 변에 수직인 선의 각도는 90도가 되고,
  * 두 벡터 v2-v1, v3-v2 반대편의 각도는 360 - 90 - 90 - theta가 되어 결과적으로 180 - theta가 된다.
  * 호의 길이는 R * theta이므로 이 값을 다각형의 각 변의 길이의 합에 더해주면 된다. (문제에서는 반지름 R이 L로 나온다)
- *
+ * <p>
  * 즉 다각형에서 순서대로 v1, v2, v3 세점을 선택하며 (v1이 마지막 점이 될 때까지) v1, v2 사이의 거리를 더해주고,
  * 호의 길이는 위의 방식대로 theta값을 구해 L * theta 값을 더해주면 되는 것이다.
  * theta값의 경우 dot product (벡터의 내적) 를 이용해 구할 수 있다.
  * a dot b = (a.x * b.x) + (a.y * b.y) = |a||b|cos(theta) 이고,
  * cos(theta) = (a dot b) / |a||b| = ((a.x * b.x) + (a.y * b.y)) / |a||b| 가 되어
  * theta = acos(((a.x * b.x) + (a.y * b.y)) / |a||b|) 값을 통해 구할 수 있다. (acos은 cos의 역함수이다)
- *
+ * <p>
  * -----------------
  * Input 1
  * 9 100
@@ -36,7 +36,7 @@ import java.util.*;
  * 500 200
  * 350 200
  * 200 200
- *
+ * <p>
  * Output 1
  * 1628
  * -----------------
@@ -134,12 +134,12 @@ public class BOJ7420 {
             Vertex v1 = vertexStack.get(i);
             Vertex v2 = i > vertexStack.size() - 2 ? vertexStack.get(i + 1 - size) : vertexStack.get(i + 1);
             Vertex v3 = i > vertexStack.size() - 3 ? vertexStack.get(i + 2 - size) : vertexStack.get(i + 2);
-            Vertex v4 = new Vertex(v2.x - v1.x, v2.y - v1.y);
+            Vertex v4 = new Vertex(v1.x - v2.x, v1.y - v2.y);
             Vertex v5 = new Vertex(v3.x - v2.x, v3.y - v2.y);
             double dist1 = v1.dist(v2);
             double dist2 = v2.dist(v3);
             int dot = v4.dotProduct(v5);
-            double theta = Math.acos(dot / dist1 / dist2);
+            double theta = Math.PI - Math.acos(dot / dist1 / dist2);
             length += v1.dist(v2);
             length += theta * L;
         }
