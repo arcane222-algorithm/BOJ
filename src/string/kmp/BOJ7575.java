@@ -42,11 +42,11 @@ public class BOJ7575 {
         int match = 0, search = 1;
 
         for (; search < K; search++) {
-            while (match > 0 && patterns[search + begin] != patterns[match]) {
+            while (match > 0 && patterns[search + begin] != patterns[match + begin]) {
                 match = pi[match - 1];
             }
 
-            if (patterns[search + begin] == patterns[match]) {
+            if (patterns[search + begin] == patterns[match + begin]) {
                 pi[search] = ++match;
             }
         }
