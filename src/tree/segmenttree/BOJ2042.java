@@ -1,4 +1,4 @@
-package indexedtree;
+package tree.segmenttree;
 
 import java.io.*;
 import java.util.*;
