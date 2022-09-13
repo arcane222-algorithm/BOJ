@@ -1,4 +1,4 @@
-package bruteforce;
+package bruteforce.bfs;
 
 import java.io.*;
 import java.util.*;
@@ -6,6 +6,10 @@ import java.util.*;
 
 /**
  * 토마토 - BOJ7576
+ * -----------------
+ *
+ *
+ *
  * -----------------
  * Input 1
  * 6 4

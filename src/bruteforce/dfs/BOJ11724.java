@@ -1,4 +1,4 @@
-package bruteforce;
+package bruteforce.dfs;
 
 import java.io.*;
 import java.util.*;
@@ -6,6 +6,10 @@ import java.util.*;
 
 /**
  * 연결 요소의 개수 - BOJ11724
+ * -----------------
+ *
+ * 
+ *
  * -----------------
  * Input 1
  * 6 5

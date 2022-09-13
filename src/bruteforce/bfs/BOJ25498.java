@@ -1,4 +1,4 @@
-package bruteforce;
+package bruteforce.bfs;
 
 import java.io.*;
 import java.util.*;
@@ -7,8 +7,6 @@ import java.util.*;
 /**
  * 핸들 뭘로 하지 - BOJ25498
  * -----------------
- *
- *
  *
  *
  *
