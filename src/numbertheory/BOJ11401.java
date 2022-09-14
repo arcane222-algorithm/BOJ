@@ -6,6 +6,13 @@ import java.util.StringTokenizer;
 /**
  * 이항 계수 3 - BOJ 11401
  * -----------------
+ * category: numbertheory (정수론), exponentiation by squaring (분할정복을 이용한 거듭제곱)
+ * Time-Complexity: O(logN)
+ * -----------------
+ *
+ *
+ *
+ * -----------------
  * Input 1
  * 5 2
  *

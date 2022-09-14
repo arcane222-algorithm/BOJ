@@ -5,6 +5,10 @@ import java.io.*;
 
 /**
  * 피보나치 수 6 - BOJ11444
+ * -----------------
+ * category: mathematics (수학), exponentiation by squaring (분할정복을 이용한 거듭제곱)
+ * Time-Complexity: O(logN)
+ * -----------------
  *
  * 분할 정복을 이용한 거듭제곱 문제이다.
  * 기본적으로 N번째 피보나치 수를 구하기 위해서는 O(N)의 연산이 필요하다.
