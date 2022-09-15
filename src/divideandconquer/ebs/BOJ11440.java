@@ -5,47 +5,41 @@ import java.util.*;
 
 
 /**
- * Matrix Powers - BOJ5095
+ * 피보나치 수의 제곱의 합 - BOJ11440
  * -----------------
  * category: mathematics (수학), exponentiation by squaring (분할정복을 이용한 거듭제곱)
- * Time-Complexity: O((N^3)logP)
+ * Time-Complexity: O(logN)
  * -----------------
  *
- * 매 테스트 케이스 마다 N, M, P가 주어진다.
- * NxN의 정사각행렬을 P번 거듭제곱 한 값을 M으로 modular 한 결과를 출력해야 한다.
- * N이 최대 100까지 들어오고 NxN 행렬의 곱은 O(N^3)의 시간이 소요된다.
- * 이러한 거듭제곱이 P = 최대 320000까지 들어오므로 선형계산으로 곱할 경우 100 x 100 x 100 x 320000 = 3.2 x 10^11으로 시간초과가 발생한다.
- * 분할정복을 이용한 거듭제곱을 통해 N^3 = K라고 한다면 제곱마다 K 시간이 필요하고 분할정복을 이용한 거듭제곱을 이용하여 O(KlogP)에 해결이 가능하다.
+ * N이 최대 10^18까지 들어오므로 선형으로 합을 구하게 되면 시간안에 해결이 불가능하다.
+ * 피보나치 수는 F(n) = F(n - 1) + F(n - 2)이고,
+ * n = k + 1이라고 할 때,
+ * F(n) = F(k + 1) = F(k) + F(k - 1)이고, F(k - 1)을 이항하면
+ * F(k) = F(k + 1) - F(k - 1) 이다.
+ * 양변에 F(k)를 곱하면
+ * (F(k))^2 = F(k + 1)F(k) - F(k)F(k - 1) 이 된다.
+ *
+ * 이제 피보나치 수의 제곱의 합을 나타내면
+ * sigma (k = 1, n) (F(k))^2 = {F(n + 1)F(n) - F(n)F(n - 1)} + {F(n)F(n - 1) - F(n - 1)F(n - 2)} + ... + {F(3)F(2) - F(2)F(1)} + {F(2)F(1) - F(1)F(0)}
+ *                           = F(n + 1)F(n) - F(1)F(0)
+ *                           = F(n + 1)F(n) 이다. (F(0)은 0이므로)
+ *
+ * 이제 0항부터 n항까지 피보나치 수의 합의 경우 F(n + 1)F(n)의 값을 구해주면 되고
+ * ( F(n)   )  = (1 1)^n-1 ( F(n-1) )
+ * ( F(n-1) )    (1 0)     ( F(n-2) )
+ * 를 통해 F(n)을 구할 수 있으므로 F(n), F(n + 1)를 구해 위 값을 계산한다.
+ *
+ * + 분할정복을 이용한 거듭제곱 구현 시 재귀 함수를 이용하여 구현할 경우 n이 커지면 StackOverflow가 발생할 수 있으므로 반복문을 이용하여 구현한다.
  *
  * -----------------
  * Input 1
- * 2 17 2
- * 1 2
- * 3 4
- * 0 0 0
+ * 10
  *
  * Output 1
- * 7 10
- * 15 5
- * -----------------
- * Input 2
- * 2 17 2
- * 1 2
- * 3 4
- * 2 17 2
- * 1 2
- * 3 4
- * 0 0 0
- *
- * Output 2
- * 7 10
- * 15 5
- *
- * 7 10
- * 15 5
+ * 4895
  * -----------------
  */
-public class BOJ5095 {
+public class BOJ11440 {
 
     private static class Matrix2D {
         private int row, column, size;
@@ -56,6 +50,15 @@ public class BOJ5095 {
             this.column = column;
             this.size = row * column;
             elements = new long[size];
+        }
+
+        public static Matrix2D getIdentity(int row, int column) {
+            Matrix2D identity = new Matrix2D(row, column);
+            for (int i = 0; i < row; i++) {
+                identity.setElement(i, i, 1);
+            }
+
+            return identity;
         }
 
         public boolean addToMat(Matrix2D mat) {
@@ -74,7 +77,6 @@ public class BOJ5095 {
 
             return result;
         }
-
 
         public boolean subToMat(Matrix2D mat) {
             if (mat.getRow() != row || mat.getColumn() != column) return false;
@@ -166,23 +168,20 @@ public class BOJ5095 {
         }
     }
 
-    public static Matrix2D fastPow(Matrix2D mat, int exponent, int mod) {
-        if (exponent == 1) return mat.modular(mod);
-        else {
-            Matrix2D result, temp;
-            temp = fastPow(mat, exponent >> 1, mod);
+    static final int MOD = (int) 1e9 + 7;
+    static long n;
 
-            if ((exponent & 1) == 0) {
-                result = temp.multiply(temp).modular(mod);
-            } else {
-                result = temp.multiply(temp).modular(mod).multiply(mat.modular(mod)).modular(mod);
-            }
-            return result;
+    public static Matrix2D fastPow(Matrix2D mat, long n) {
+        Matrix2D result = Matrix2D.getIdentity(2, 2);
+
+        while (n > 0) {
+            if ((n & 1) == 1) result = result.multiply(mat).modular(MOD);
+            mat = mat.multiply(mat).modular(MOD);
+            n >>= 1;
         }
-    }
 
-    static int N, M, P;
-    static StringBuilder result = new StringBuilder();
+        return result;
+    }
 
     public static void main(String[] args) throws Exception {
         // Input & Output stream
@@ -190,26 +189,26 @@ public class BOJ5095 {
         BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
         StringTokenizer st = null;
 
-        while (true) {
-            st = new StringTokenizer(br.readLine());
-            N = Integer.parseInt(st.nextToken());
-            M = Integer.parseInt(st.nextToken());
-            P = Integer.parseInt(st.nextToken());
-            if (N == 0 && M == 0 && P == 0) break;
-
-            Matrix2D mat2D = new Matrix2D(N, N);
-            for (int j = 0; j < N; j++) {
-                st = new StringTokenizer(br.readLine());
-                for (int k = 0; k < N; k++) {
-                    int value = Integer.parseInt(st.nextToken());
-                    mat2D.setElement(j, k, value);
-                }
+        n = Long.parseLong(br.readLine());
+        Matrix2D mat2D = new Matrix2D(2, 2);
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 2; j++) {
+                if (i == 1 && j == 1) mat2D.setElement(i, j, 0);
+                else mat2D.setElement(i, j, 1);
             }
-
-            result.append(fastPow(mat2D, P, M)).append("\n\n");
         }
-        result.delete(result.length() - 2, result.length());
-        bw.write(result.toString());
+
+        Matrix2D temp = new Matrix2D(2, 1);
+        temp.setElement(0, 1);
+
+        Matrix2D mat2DPowN_1 = fastPow(mat2D, n - 1);
+        Matrix2D mat2DPowN = mat2DPowN_1.multiply(mat2D).modular(MOD);
+
+        mat2DPowN_1 = mat2DPowN_1.multiply(temp);
+        mat2DPowN = mat2DPowN.multiply(temp);
+
+        long result = mat2DPowN_1.multiply(mat2DPowN).modular(MOD).getElement(0);
+        bw.write(String.valueOf(result));
 
         // close the buffer
         br.close();
