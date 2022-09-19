@@ -8,7 +8,7 @@ import java.util.*;
  * xor 게임 - BOJ15710
  * -----------------
  * category: mathematics (수학), exponentiation by squaring (분할정복을 이용한 거듭제곱)
- * Time-Complexity: O(logN)
+ * Time-Complexity: O( log(31 * (N - 1)) ) => O(logN)
  * -----------------
  *
  * 현재 a라는 수에서 0 ~ 2^31 - 1 범위의 어떤 수 u를 뽑아 a xor u를 해야 한다. a는 a xor u로 바뀌게 되고

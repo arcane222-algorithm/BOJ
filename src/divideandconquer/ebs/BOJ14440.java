@@ -8,7 +8,7 @@ import java.util.*;
  * 정수 수열 - BOJ14440
  * -----------------
  * category: mathematics (수학), exponentiation by squaring (분할정복을 이용한 거듭제곱)
- * Time-Complexity: O(logN)
+ * Time-Complexity: O(4logN) => O(logN)
  * -----------------
  *
  * 일반적인 피보나치 수열의 일반항 f(n) = f(n - 1) + f(n - 2)이므로 이것을 행렬로 나타내면

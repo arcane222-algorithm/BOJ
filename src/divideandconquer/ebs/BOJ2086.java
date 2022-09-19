@@ -8,7 +8,7 @@ import java.util.*;
  * 피보나치 수의 합 - BOJ2086
  * -----------------
  * category: mathematics (수학), exponentiation by squaring (분할정복을 이용한 거듭제곱)
- * Time-Complexity: O(logN)
+ * Time-Complexity: O( 4(log(b + 2) + log(a + 1)) ) => O( log(a) + log(b) )
  * -----------------
  *
  * 일반적인 피보나치 수열의 일반항 f(n) = f(n - 1) + f(n - 2) 이고 이것을 행렬로 나타내면

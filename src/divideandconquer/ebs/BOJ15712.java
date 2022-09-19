@@ -8,7 +8,7 @@ import java.util.*;
  * 등비수열 - BOJ15712
  * -----------------
  * category: mathematics (수학), exponentiation by squaring (분할정복을 이용한 거듭제곱)
- * Time-Complexity: O(logN)
+ * Time-Complexity: O(4logN) => O(logN)
  * -----------------
  *
  * 첫항이 a, 공비가 r, 항의 수가 n인 등비수열의 합은

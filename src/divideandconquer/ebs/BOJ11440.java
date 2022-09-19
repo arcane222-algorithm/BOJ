@@ -8,7 +8,7 @@ import java.util.*;
  * 피보나치 수의 제곱의 합 - BOJ11440
  * -----------------
  * category: mathematics (수학), exponentiation by squaring (분할정복을 이용한 거듭제곱)
- * Time-Complexity: O(logN)
+ * Time-Complexity: O(4logN) => O(logN)
  * -----------------
  *
  * N이 최대 10^18까지 들어오므로 선형으로 합을 구하게 되면 시간안에 해결이 불가능하다.

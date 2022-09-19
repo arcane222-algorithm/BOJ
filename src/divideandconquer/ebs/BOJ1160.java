@@ -4,7 +4,7 @@ package divideandconquer.ebs;
  * Random Number Generator - BOJ1160
  * -----------------
  * category: mathematics (수학), exponentiation by squaring (분할정복을 이용한 거듭제곱)
- * Time-Complexity: O(logN)
+ * Time-Complexity: O(4logN) => O(logN)
  * -----------------
  *
  *
