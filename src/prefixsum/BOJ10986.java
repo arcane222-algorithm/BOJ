@@ -5,6 +5,7 @@ import java.util.*;
 
 /**
  * 나머지 합 - BOJ10986
+ * -----------------
  * (prefixSum[i] - prefixSum[j]) % M = 0
  * prefixSum[i] % M = prefixSum[j] % M
  *
