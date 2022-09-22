@@ -5,7 +5,7 @@ import java.util.*;
 
 
 /**
- * N-Queen - BOJ9663
+ * 비숍 - BOJ1799
  * -----------------
  * category: brute force (브루트포스 알고리즘)
  *           back tracking (백트래킹)
