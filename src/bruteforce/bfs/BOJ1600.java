@@ -7,6 +7,8 @@ import java.util.*;
 /**
  * 말이 되고픈 원숭이 - BOJ1600
  * -----------------
+ * category: graph traversal (그래프 탐색)
+ *           bfs (너비 우선 탐색)
  * -----------------
  * Input 1
  * 1

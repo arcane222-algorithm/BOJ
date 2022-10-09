@@ -8,6 +8,8 @@ import java.util.*;
 /**
  * 벽 부수고 이동하기 2 - BOJ14442
  * -----------------
+ * category: graph traversal (그래프 탐색)
+ *           bfs (너비 우선 탐색)
  * -----------------
  * Input 1
  * 6 4 1
