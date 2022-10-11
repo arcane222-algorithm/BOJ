@@ -7,9 +7,8 @@ import java.util.*;
 /**
  * 핸들 뭘로 하지 - BOJ25498
  * -----------------
- *
- *
- *
+ * category: graph traversal (그래프 탐색)
+ *           bfs (너비 우선 탐색)
  * -----------------
  * Input 1
  * 8
