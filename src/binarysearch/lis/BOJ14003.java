@@ -1,4 +1,4 @@
-package binarysearch;
+package binarysearch.lis;
 
 import java.io.*;
 import java.util.*;
