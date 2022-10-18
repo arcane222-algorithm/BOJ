@@ -11,8 +11,8 @@ import java.util.*;
  *           LIS in O(nlogn) (가장 긴 증가하는 부분 수열: O(nlogn)
  * -----------------
  * Input 1
- 6
- 4 2 6 3 1 5
+ * 6
+ * 4 2 6 3 1 5
  *
  * Output 1
  * 3
