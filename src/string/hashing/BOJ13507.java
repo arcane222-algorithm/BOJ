@@ -27,9 +27,13 @@ import java.util.*;
  * 8
  * -----------------
  */
+import java.io.*;
+import java.util.*;
+
 public class BOJ13507 {
 
     static final int P = 31;
+    static final int ALPHABET_SIZE = 26;
 
     static String S, T;
     static int K;
@@ -44,10 +48,11 @@ public class BOJ13507 {
         return hash;
     }
 
-    public static int count(String s, int size) {
+    public static int count(String s, boolean[] isBad, int size) {
         int count = 0;
         for (int i = 0; i < size; i++) {
-            if (s.charAt(i) == '0') count++;
+            int idx = s.charAt(i) - 'a';
+            if (isBad[idx]) count++;
         }
 
         return count;
@@ -62,6 +67,11 @@ public class BOJ13507 {
         S = br.readLine();
         T = br.readLine();
         K = Integer.parseInt(br.readLine());
+
+        boolean[] isBad = new boolean[ALPHABET_SIZE];
+        for (int i = 0; i < ALPHABET_SIZE; i++) {
+            isBad[i] = T.charAt(i) == '0';
+        }
 
         final int Size = S.length();
         pows = new long[Size];
@@ -79,14 +89,14 @@ public class BOJ13507 {
             for (int i = 0; i < Size - ws + 1; i++) {
                 if (i == 0) {
                     hash = hash(S, ws);
-                    count = count(T, ws);
+                    count = count(S, isBad, ws);
                 } else {
                     char oldChar = S.charAt(i - 1);
                     char newChar = S.charAt(i + ws - 1);
                     hash = P * (hash - oldChar * pows[ws - 1]) + newChar;
 
-                    if (T.charAt(i - 1) == '0') count--;
-                    if (T.charAt(i + ws - 1) == '0') count++;
+                    if (isBad[S.charAt(i - 1) - 'a']) count--;
+                    if (isBad[S.charAt(i + ws - 1) - 'a']) count++;
                 }
 
                 if (!set.contains(hash) && count <= K) {
