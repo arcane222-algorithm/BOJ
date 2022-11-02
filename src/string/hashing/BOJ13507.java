@@ -5,7 +5,7 @@ import java.util.*;
 
 
 /**
- * 구간 성분 - BOJ13507
+ * 좋은 부분 문자열의 개수 - BOJ13507
  * -----------------
  * category: string (문자열)
  *           hashing (해싱)
@@ -27,9 +27,6 @@ import java.util.*;
  * 8
  * -----------------
  */
-import java.io.*;
-import java.util.*;
-
 public class BOJ13507 {
 
     static final int P = 31;
