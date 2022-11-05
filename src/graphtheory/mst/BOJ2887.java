@@ -1,4 +1,4 @@
-package mst;
+package graphtheory.mst;
 
 import java.io.*;
 import java.util.*;

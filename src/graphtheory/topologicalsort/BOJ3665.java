@@ -7,6 +7,9 @@ import java.util.*;
 /**
  * 최종 순위 - BOJ3665
  * -----------------
+ * category: graph theory (그래프이론)
+ *           topological sorting (위상 정렬)
+ * -----------------
  * Input 1
  * 3
  * 5
