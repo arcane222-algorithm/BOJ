@@ -9,6 +9,7 @@ import java.util.*;
  * -----------------
  * category: graph theory (그래프이론)
  *           topological sorting (위상 정렬)
+ *           dynamic programming (다이나믹 프로그래밍)
  * -----------------
  * Input 1
  * 7
