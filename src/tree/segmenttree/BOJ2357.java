@@ -5,61 +5,38 @@ import java.util.*;
 
 
 /**
- * 구간 곱 구하기 - BOJ11505
+ * 최솟값과 최댓값 - BOJ2357
  * -----------------
  * category: data structure (자료구조)
  *           segment tree (세그먼트 트리)
  * -----------------
  * Input 1
- * 5 2 2
- * 1
- * 2
- * 3
- * 4
+ * 10 4
+ * 75
+ * 30
+ * 100
+ * 38
+ * 50
+ * 51
+ * 52
+ * 20
+ * 81
  * 5
- * 1 3 6
- * 2 2 5
- * 1 5 2
- * 2 3 5
+ * 1 10
+ * 3 5
+ * 6 9
+ * 8 10
  *
  * Output 1
- * 240
- * 48
- * -----------------
- * Input 2
- * 5 2 2
- * 1
- * 2
- * 3
- * 4
- * 5
- * 1 3 0
- * 2 2 5
- * 1 3 6
- * 2 2 5
- *
- * Output 2
- * 0
- * 240
- * -----------------
- * Input 3
- * 4 1 2
- * 1000000
- * 1000000
- * 1000000
- * 1000000
- * 2 1 4
- * 1 2 1
- * 2 1 4
- *
- * Output 3
- * 49000000
- * 49
+ * 5 100
+ * 38 100
+ * 20 81
+ * 5 81
  * -----------------
  */
-public class BOJ11505 {
+public class BOJ2357 {
 
-    static class Reader {
+    private static class Reader {
         final private int BUFFER_SIZE = 1 << 16;
         private DataInputStream din;
         private byte[] buffer;
@@ -167,97 +144,79 @@ public class BOJ11505 {
     }
 
     private static class SegTree {
-        private long[] nodes;
+        private int[] nodes;
         private int leafCount;
+        private boolean isMin;
 
-        public SegTree(long[] base) {
+        public SegTree(int[] base, boolean isMin) {
+            this.isMin = isMin;
             init(base);
         }
 
-        private void init(long[] base) {
+        private void init(int[] base) {
             leafCount = 1;
             while (leafCount < base.length)
                 leafCount <<= 1;
 
-            nodes = new long[leafCount << 1];
-            Arrays.fill(nodes, 1);
+            nodes = new int[leafCount << 1];
+            Arrays.fill(nodes, isMin ? Integer.MAX_VALUE : Integer.MIN_VALUE);
             System.arraycopy(base, 0, nodes, leafCount, base.length);
 
             for (int i = leafCount - 1; i > 0; i--) {
                 int left = i << 1;
                 int right = (i << 1) + 1;
-                nodes[i] = (nodes[left] % MOD * nodes[right] % MOD) % MOD;
+                nodes[i] = isMin ? Math.min(nodes[left], nodes[right]) : Math.max(nodes[left], nodes[right]);
             }
+
+            //System.out.println(Arrays.toString(nodes));
         }
 
-        public void update(int node, long value) {
-            int idx = leafCount + node - 1;
-            nodes[idx] = value;
-
-            while (idx > 0) {
-                int opponent = (idx & 1) == 0 ? idx + 1 : idx - 1;
-                int parent = idx >> 1;
-                nodes[parent] = (nodes[idx] % MOD) * (nodes[opponent] % MOD) % MOD;
-                idx = parent;
-            }
-        }
-
-        public long query(int left, int right, int node, int queryLeft, int queryRight) {
+        public int query(int left, int right, int node, int queryLeft, int queryRight) {
             if (queryLeft > right || queryRight < left) {
-                return 1;
+                return isMin ? Integer.MAX_VALUE : Integer.MIN_VALUE;
             } else if (queryLeft <= left && right <= queryRight) {
-                return nodes[node] % MOD;
+                return nodes[node];
             } else {
                 int mid = (left + right) >> 1;
-                long leftValue = query(left, mid, node << 1, queryLeft, queryRight);
-                long rightValue = query(mid + 1, right, (node << 1) + 1, queryLeft, queryRight);
+                int leftValue = query(left, mid, node << 1, queryLeft, queryRight);
+                int rightValue = query(mid + 1, right, (node << 1) + 1, queryLeft, queryRight);
 
-                return (leftValue % MOD) * (rightValue % MOD) % MOD;
+                return isMin ? Math.min(leftValue, rightValue) : Math.max(leftValue, rightValue);
             }
         }
     }
 
-    static final int MOD = (int) (1e9 + 7);
-    static int N, M, K;
-    static long[] nums;
+    static int N, M;
+    static int[] nums;
+    static StringBuilder result = new StringBuilder();
+
 
     public static void main(String[] args) throws Exception {
         // Input & Output stream
         Reader r = new Reader();
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
         StringTokenizer st = null;
 
         N = r.nextInt();
         M = r.nextInt();
-        K = r.nextInt();
-
-        nums = new long[N];
+        nums = new int[N];
         for (int i = 0; i < N; i++) {
             nums[i] = r.nextInt();
         }
 
-        SegTree segTree = new SegTree(nums);
-        for (int i = 0; i < M + K; i++) {
+        SegTree minSegTree = new SegTree(nums, true);
+        SegTree maxSegTree = new SegTree(nums, false);
+
+        for (int i = 0; i < M; i++) {
             int a = r.nextInt();
             int b = r.nextInt();
-            int c = r.nextInt();
-
-            switch (a) {
-                case 1:
-                    segTree.update(b, c);
-                    break;
-
-                case 2:
-                    bw.write(String.valueOf(segTree.query(1, segTree.leafCount, 1, b, c)));
-                    bw.write('\n');
-                    break;
-            }
+            int min = minSegTree.query(1, minSegTree.leafCount, 1, a, b);
+            int max = maxSegTree.query(1, maxSegTree.leafCount, 1, a, b);
+            result.append(min).append(' ').append(max).append('\n');
         }
-
+        bw.write(result.toString());
 
         // close the buffer
-        br.close();
         bw.close();
     }
 }

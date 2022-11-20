@@ -7,6 +7,9 @@ import java.util.*;
 /**
  * 구간 합 구하기 - BOJ 2042
  * -----------------
+ * category: data structure (자료구조)
+ *           segment tree (세그먼트 트리)
+ * -----------------
  * Input 1
  * 5 2 2
  * 1
