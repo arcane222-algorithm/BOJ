@@ -5,7 +5,7 @@ import java.util.*;
 
 
 /**
- * 커피숍2 - BOJ1275
+ * 커피숍 2 - BOJ1275
  * -----------------
  * category: data structure (자료구조)
  *           segment tree (세그먼트 트리)
