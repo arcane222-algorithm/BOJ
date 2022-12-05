@@ -93,7 +93,7 @@ public class BOJ20504 {
     static int nodeCount, groupCount;
 
     static boolean[] finish;
-    static int[] nodeIds, groupIds;
+    static int[] nodeIds, groupIds, sccInDegrees;
 
     static List<List<Integer>> graph, sccGraph;
     static ArrayDeque<Integer> stack;
@@ -154,8 +154,8 @@ public class BOJ20504 {
         return parentId;
     }
 
-    public static int[] getSccInDegrees() {
-        int[] inDegrees = new int[groupCount];
+    public static void getSccInDegrees() {
+        sccInDegrees = new int[groupCount];
         for (int i = 0; i < groupCount; i++) {
             sccGraph.add(new ArrayList<>());
         }
@@ -163,50 +163,37 @@ public class BOJ20504 {
         for (int i = 1; i <= N; i++) {
             for (int adjIdx : graph.get(i)) {
                 if (groupIds[i] != groupIds[adjIdx]) {
-                    inDegrees[groupIds[adjIdx]]++;
+                    sccInDegrees[groupIds[adjIdx]]++;
                     sccGraph.get(groupIds[i]).add(groupIds[adjIdx]);
                 }
             }
         }
-
-        return inDegrees;
     }
 
-    public static void sccDfs(int currGroupId, boolean[] visited) {
-        visited[currGroupId] = true;
-
-        for (int adj : sccGraph.get(currGroupId)) {
-            if (!visited[adj]) {
-                sccDfs(adj, visited);
-            }
-        }
-    }
-
-    public static int getResult(Reader r, int[] inDegrees) throws IOException {
+    public static int getResult(Reader r) throws IOException {
         T = r.nextInt();
-        int count = 0;
+        int count = 0, zeroInDegreeCnt = 0;
         boolean[] visited = new boolean[groupCount];
+
+        for (int i = 0; i < sccInDegrees.length; i++) {
+            if (visited[i]) continue;
+            if (sccInDegrees[i] != 0) continue;
+            visited[i] = true;
+            zeroInDegreeCnt++;
+        }
+
+        visited = new boolean[groupCount];
         for (int i = 0; i < T; i++) {
             int ti = r.nextInt();
             int groupId = groupIds[ti];
 
             if (visited[groupId]) continue;
-
-            if (inDegrees[groupId] == 0) {
-                sccDfs(groupId, visited);
-                count++;
-            }
+            if (sccInDegrees[groupId] != 0) continue;
+            visited[groupId] = true;
+            count++;
         }
 
-        boolean check = true;
-        for (int i = 0; i < visited.length; i++) {
-            if (!visited[i]) {
-                check = false;
-                break;
-            }
-        }
-
-        return check ? count : -1;
+        return count == zeroInDegreeCnt ? zeroInDegreeCnt : -1;
     }
 
     public static void main(String[] args) throws Exception {
@@ -217,8 +204,8 @@ public class BOJ20504 {
 
         init(r);
         getScc();
-
-        int result = getResult(r, getSccInDegrees());
+        getSccInDegrees();
+        int result = getResult(r);
         bw.write(String.valueOf(result));
 
         // close the buffer
