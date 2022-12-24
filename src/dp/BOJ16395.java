@@ -4,7 +4,24 @@ import java.io.*;
 import java.util.*;
 
 
-
+/**
+ * 파스칼의 삼각형 - BOJ16395
+ * -----------------
+ * category: dp (동적 계획법)
+ * -----------------
+ * Input 1
+ * 5 3
+ *
+ * Output 1
+ * 6
+ * -----------------
+ * Input 2
+ * 11 3
+ *
+ * Output 2
+ * 45
+ * -----------------
+ */
 public class BOJ16395 {
 
     static int n, k;
