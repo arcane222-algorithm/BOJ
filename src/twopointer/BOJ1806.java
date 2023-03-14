@@ -7,7 +7,8 @@ import java.util.*;
 /**
  * 부분합 - BOJ1806
  * -----------------
- *
+ * category: prefix sum (누적 합)
+ *           two-pointer (투 포인터)
  * -----------------
  * Input 1
  * 10 15
